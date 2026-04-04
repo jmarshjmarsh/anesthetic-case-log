@@ -145,11 +145,11 @@ function renderCases(cases) {
     }).join('');
 
     return `<div class="specialty-group">
-      <div class="specialty-header" onclick="toggleGroup(this)">
+      <div class="specialty-header ${currentSearchQuery ? 'open' : ''}" onclick="toggleGroup(this)">
         <span>${escHtml(specialty)}</span>
         <span class="chevron">▾</span>
       </div>
-      <div class="specialty-cases collapsed">${cards}</div>
+      <div class="specialty-cases ${currentSearchQuery ? '' : 'collapsed'}">${cards}</div>
     </div>`;
   }).join('');
 }
