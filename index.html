@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Anesthetic Case Log</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Anesthetic Case Log</h1>
+  </div>
+  <div class="spacer"></div>
+  <div id="sync-status" class="sync-status"></div>
+</header>
+
+<div class="tab-bar">
+  <button class="tab-btn" id="tab-logbook" onclick="navigate('logbook')">Logbook</button>
+  <button class="tab-btn" id="tab-new" onclick="navigate('new')">+ New Case</button>
+</div>
+
+<div class="main">
+
+  <!-- ══ LOGBOOK VIEW ══ -->
+  <div id="view-logbook" class="view">
+    <div class="search-wrap">
+      <input type="search" id="search-input" class="search-input" placeholder="Search cases…" oninput="filterCases(this.value)" autocomplete="off">
+    </div>
+    <div id="cases-list"></div>
+  </div>
+
+  <!-- ══ FORM VIEW ══ -->
+  <div id="view-form" class="view" style="display:none">
+    <h2 class="view-title" id="form-title">New Case</h2>
+    <form id="case-form" onsubmit="handleFormSubmit(event)">
+      <input type="hidden" id="case-id">
+
+      <!-- Always visible -->
+      <div class="form-section">
+        <h3>Overview</h3>
+        <div class="field">
+          <label for="f-specialty">Specialty / Type</label>
+          <select id="f-specialty" onchange="handleSpecialtyChange(this.value)">
+            <option value="">Select…</option>
+            <option>General Surgery</option>
+            <option>ENT</option>
+            <option>Orthopedics</option>
+            <option>Neurosurgery</option>
+            <option>Cardiac</option>
+            <option>Vascular</option>
+            <option>OB/GYN</option>
+            <option>Urology</option>
+            <option>Plastics</option>
+            <option>Ophthalmology</option>
+            <option>Thoracic</option>
+            <option>Trauma</option>
+            <option>Pediatric</option>
+            <option>Procedure</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="f-procedure">Procedure Name <span class="req">*</span></label>
+          <input type="text" id="f-procedure" required placeholder="e.g. Total thyroidectomy">
+        </div>
+        <!-- Hidden in Procedure mode -->
+        <div class="field anesthetic-field">
+          <label for="f-anesthetic-type">Anesthetic Type</label>
+          <select id="f-anesthetic-type">
+            <option value="">Select type…</option>
+            <option>General - ETT</option>
+            <option>General - LMA</option>
+            <option>MAC / Monitored Sedation</option>
+            <option>Spinal</option>
+            <option>Epidural</option>
+            <option>CSE (Combined Spinal-Epidural)</option>
+            <option>Regional Block</option>
+            <option>Local + Sedation</option>
+            <option>Other</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Hidden in Procedure mode -->
+      <div class="form-section anesthetic-field">
+        <h3>Airway</h3>
+        <div class="field">
+          <textarea id="f-airway" rows="3" placeholder="e.g. ETT 7.0 cuffed, video laryngoscopy, Grade 2a view"></textarea>
+        </div>
+      </div>
+
+      <!-- Hidden in Procedure mode -->
+      <div class="form-section anesthetic-field">
+        <h3>Drugs</h3>
+        <div class="field">
+          <textarea id="f-drugs" rows="3" placeholder="e.g. Propofol 150mg, Fentanyl 100mcg, Succinylcholine 140mg / Sevo 1.5–2% / Neostigmine 3mg + Glycopyrrolate 0.6mg"></textarea>
+        </div>
+      </div>
+
+      <!-- Hidden in Procedure mode -->
+      <div class="form-section anesthetic-field">
+        <h3>Notes</h3>
+        <div class="field">
+          <label for="f-considerations">Key Considerations</label>
+          <textarea id="f-considerations" rows="3" placeholder="Things to know before this case — positioning, access, monitoring, concerns"></textarea>
+        </div>
+        <div class="field">
+          <label for="f-complications">Complications / Notable Events</label>
+          <textarea id="f-complications" rows="3" placeholder="What happened and how it was managed"></textarea>
+        </div>
+        <div class="field">
+          <label for="f-notes">Notes</label>
+          <textarea id="f-notes" rows="3" placeholder="Anything else worth remembering"></textarea>
+        </div>
+      </div>
+
+      <!-- Shown only in Procedure mode -->
+      <div class="form-section procedure-field" style="display:none">
+        <div class="field">
+          <textarea id="f-procedure-notes" rows="10" placeholder="Notes, steps, considerations…"></textarea>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary" id="form-submit-btn">Save Case</button>
+        <button type="button" class="btn" onclick="navigate('logbook')">Cancel</button>
+        <button type="button" class="btn btn-danger" id="delete-btn" onclick="deleteCaseFromForm()" style="display:none">Delete</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- ══ DETAIL VIEW ══ -->
+  <div id="view-detail" class="view" style="display:none">
+    <div id="case-detail-content"></div>
+    <div class="detail-actions">
+      <button class="btn btn-primary" onclick="editCurrentCase()">Edit</button>
+      <button class="btn" onclick="navigate('logbook')">← Back</button>
+      <button class="btn btn-danger" onclick="deleteCaseFromDetail()">Delete</button>
+    </div>
+  </div>
+
+</div>
+
+<script src="app.js"></script>
+<script type="module" src="firebase.js"></script>
+</body>
+</html>
