@@ -143,15 +143,33 @@ header h1 {
 .specialty-group { margin-bottom: 28px; }
 
 .specialty-header {
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 700;
-  letter-spacing: .12em;
+  letter-spacing: .06em;
   text-transform: uppercase;
   color: var(--primary);
-  padding-bottom: 8px;
+  padding: 10px 0;
   border-bottom: 2px solid var(--primary);
   margin-bottom: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  user-select: none;
 }
+
+.specialty-header:hover { color: var(--primary-mid); }
+
+.chevron {
+  font-size: 16px;
+  line-height: 1;
+  transition: transform .2s ease;
+  color: var(--border-mid);
+}
+
+.specialty-header.open .chevron { transform: rotate(-180deg); }
+
+.specialty-cases.collapsed { display: none; }
 
 .case-card {
   border-bottom: 1px solid var(--border);

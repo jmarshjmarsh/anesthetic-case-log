@@ -55,6 +55,13 @@ function navigate(hash) {
 }
 window.navigate = navigate;
 
+function toggleGroup(header) {
+  const cases = header.nextElementSibling;
+  cases.classList.toggle('collapsed');
+  header.classList.toggle('open');
+}
+window.toggleGroup = toggleGroup;
+
 // ─── View switcher ────────────────────────────────────────────────────────────
 function showView(name) {
   document.getElementById('view-logbook').style.display = name === 'logbook' ? 'block' : 'none';
@@ -138,8 +145,11 @@ function renderCases(cases) {
     }).join('');
 
     return `<div class="specialty-group">
-      <div class="specialty-header">${escHtml(specialty)}</div>
-      ${cards}
+      <div class="specialty-header" onclick="toggleGroup(this)">
+        <span>${escHtml(specialty)}</span>
+        <span class="chevron">▾</span>
+      </div>
+      <div class="specialty-cases collapsed">${cards}</div>
     </div>`;
   }).join('');
 }
