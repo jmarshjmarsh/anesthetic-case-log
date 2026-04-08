@@ -127,6 +127,18 @@
         </div>
       </div>
 
+      <div class="form-section">
+        <h3>Image</h3>
+        <div class="field">
+          <label for="f-image">Photo or scan</label>
+          <input type="file" id="f-image" accept="image/*" onchange="handleImageSelect(this)">
+          <div id="image-preview" style="display:none">
+            <img id="image-preview-img" src="" alt="Case image">
+            <button type="button" id="image-remove-btn" class="btn-remove-image" onclick="removeImagePreview()">Remove image</button>
+          </div>
+        </div>
+      </div>
+
       <div class="form-actions">
         <button type="submit" class="btn btn-primary" id="form-submit-btn">Save Case</button>
         <button type="button" class="btn" onclick="navigate('logbook')">Cancel</button>

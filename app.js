@@ -15,6 +15,9 @@ let allCases = [];
 let currentCaseId = null;
 let dbReady = false;
 let currentSearchQuery = '';
+let pendingImageFile = null;
+let removeImage = false;
+let currentImageUrl = null;
 
 // ─── Highlight utility ────────────────────────────────────────────────────────
 function highlight(str) {
@@ -198,7 +201,42 @@ function resetForm() {
   const btn = document.getElementById('form-submit-btn');
   btn.disabled = false;
   btn.textContent = 'Save Case';
+  pendingImageFile = null;
+  removeImage = false;
+  currentImageUrl = null;
+  updateImagePreview();
 }
+
+function updateImagePreview() {
+  const preview = document.getElementById('image-preview');
+  const img = document.getElementById('image-preview-img');
+  if (pendingImageFile) {
+    img.src = URL.createObjectURL(pendingImageFile);
+    preview.style.display = 'block';
+  } else if (currentImageUrl && !removeImage) {
+    img.src = currentImageUrl;
+    preview.style.display = 'block';
+  } else {
+    preview.style.display = 'none';
+  }
+}
+
+function handleImageSelect(input) {
+  if (input.files && input.files[0]) {
+    pendingImageFile = input.files[0];
+    removeImage = false;
+    updateImagePreview();
+  }
+}
+window.handleImageSelect = handleImageSelect;
+
+function removeImagePreview() {
+  pendingImageFile = null;
+  removeImage = true;
+  document.getElementById('f-image').value = '';
+  updateImagePreview();
+}
+window.removeImagePreview = removeImagePreview;
 
 async function loadFormData(caseId) {
   try {
@@ -215,6 +253,10 @@ async function loadFormData(caseId) {
     setField('f-notes',           c.notes);
     setField('f-procedure-notes', c.procedureNotes);
     handleSpecialtyChange(c.specialty || '');
+    currentImageUrl = c.imageUrl || null;
+    pendingImageFile = null;
+    removeImage = false;
+    updateImagePreview();
   } catch (e) {
     console.error('Failed to load case for editing:', e);
   }
@@ -247,9 +289,22 @@ async function handleFormSubmit(e) {
 
   try {
     if (currentCaseId) {
-      await window.casesDB.update(currentCaseId, data);
+      let imageUrl = removeImage ? null : currentImageUrl;
+      if (removeImage && currentImageUrl) {
+        await window.casesDB.deleteImage(currentCaseId);
+      }
+      if (pendingImageFile) {
+        btn.textContent = 'Uploading image…';
+        imageUrl = await window.casesDB.uploadImage(currentCaseId, pendingImageFile);
+      }
+      await window.casesDB.update(currentCaseId, { ...data, imageUrl: imageUrl || null });
     } else {
-      await window.casesDB.add(data);
+      const docRef = await window.casesDB.add(data);
+      if (pendingImageFile) {
+        btn.textContent = 'Uploading image…';
+        const imageUrl = await window.casesDB.uploadImage(docRef.id, pendingImageFile);
+        await window.casesDB.update(docRef.id, { imageUrl });
+      }
     }
     btn.disabled = false;
     btn.textContent = currentCaseId ? 'Save Changes' : 'Save Case';
@@ -267,6 +322,7 @@ async function deleteCaseFromForm() {
   if (!currentCaseId) return;
   if (!confirm('Delete this case? This cannot be undone.')) return;
   try {
+    await window.casesDB.deleteImage(currentCaseId);
     await window.casesDB.remove(currentCaseId);
     currentCaseId = null;
     navigate('logbook');
@@ -326,6 +382,8 @@ function renderDetail(c) {
       </div>
     </div>
 
+    ${c.imageUrl ? `<div class="detail-section"><img class="case-image" src="${escHtml(c.imageUrl)}" alt="Case image" loading="lazy"></div>` : ''}
+
     ${c.specialty === 'Procedure'
       ? (c.procedureNotes ? `<div class="detail-section"><div class="procedure-text">${highlight(c.procedureNotes)}</div></div>` : '')
       : `
@@ -350,6 +408,7 @@ async function deleteCaseFromDetail() {
   if (!currentCaseId) return;
   if (!confirm('Delete this case? This cannot be undone.')) return;
   try {
+    await window.casesDB.deleteImage(currentCaseId);
     await window.casesDB.remove(currentCaseId);
     currentCaseId = null;
     navigate('logbook');

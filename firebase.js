@@ -13,6 +13,13 @@ import {
   orderBy,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+import {
+  getStorage,
+  ref,
+  uploadBytes,
+  getDownloadURL,
+  deleteObject
+} from "https://www.gstatic.com/firebasejs/12.11.0/firebase-storage.js";
 
 // ─── Firebase Config ──────────────────────────────────────────────────────────
 // TODO: Replace with your Firebase project config
@@ -36,6 +43,8 @@ const db = initializeFirestore(app, {
   localCache: persistentLocalCache()
 });
 
+const storage = getStorage(app);
+
 const casesCol = collection(db, 'cases');
 
 // ─── Expose DB methods on window ──────────────────────────────────────────────
@@ -54,6 +63,18 @@ window.casesDB = {
   },
   remove(id) {
     return deleteDoc(doc(db, 'cases', id));
+  },
+  async uploadImage(caseId, file) {
+    const storageRef = ref(storage, `cases/${caseId}/image`);
+    await uploadBytes(storageRef, file);
+    return getDownloadURL(storageRef);
+  },
+  async deleteImage(caseId) {
+    try {
+      await deleteObject(ref(storage, `cases/${caseId}/image`));
+    } catch (e) {
+      // No image to delete — that's fine
+    }
   }
 };
 
