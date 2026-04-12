@@ -210,14 +210,30 @@ function resetForm() {
 function updateImagePreview() {
   const preview = document.getElementById('image-preview');
   const img = document.getElementById('image-preview-img');
+  const nameEl = document.getElementById('file-preview-name');
+
   if (pendingImageFile) {
-    img.src = URL.createObjectURL(pendingImageFile);
+    const isImage = pendingImageFile.type.startsWith('image/');
+    if (isImage) {
+      img.src = URL.createObjectURL(pendingImageFile);
+      img.style.display = 'block';
+      nameEl.textContent = '';
+    } else {
+      img.style.display = 'none';
+      img.src = '';
+      nameEl.textContent = pendingImageFile.name;
+    }
     preview.style.display = 'block';
   } else if (currentImageUrl && !removeImage) {
     img.src = currentImageUrl;
+    img.style.display = 'block';
+    nameEl.textContent = '';
     preview.style.display = 'block';
   } else {
     preview.style.display = 'none';
+    img.style.display = 'none';
+    img.src = '';
+    nameEl.textContent = '';
   }
 }
 

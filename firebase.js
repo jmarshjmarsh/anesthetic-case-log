@@ -65,13 +65,14 @@ window.casesDB = {
     return deleteDoc(doc(db, 'cases', id));
   },
   async uploadImage(caseId, file) {
-    const storageRef = ref(storage, `cases/${caseId}/image`);
+    const storageRef = ref(storage, `cases/${caseId}/${file.name}`);
     await uploadBytes(storageRef, file);
     return getDownloadURL(storageRef);
   },
-  async deleteImage(caseId) {
+  async deleteImage(caseId, fileName) {
     try {
-      await deleteObject(ref(storage, `cases/${caseId}/image`));
+      const path = fileName ? `cases/${caseId}/${fileName}` : `cases/${caseId}/image`;
+      await deleteObject(ref(storage, path));
     } catch (e) {
       // No image to delete — that's fine
     }

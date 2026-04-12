@@ -128,13 +128,14 @@
       </div>
 
       <div class="form-section">
-        <h3>Image</h3>
+        <h3>Attachment</h3>
         <div class="field">
-          <label for="f-image">Photo or scan</label>
-          <input type="file" id="f-image" accept="image/*" onchange="handleImageSelect(this)">
+          <label for="f-image">File attachment</label>
+          <input type="file" id="f-image" onchange="handleImageSelect(this)">
           <div id="image-preview" style="display:none">
-            <img id="image-preview-img" src="" alt="Case image">
-            <button type="button" id="image-remove-btn" class="btn-remove-image" onclick="removeImagePreview()">Remove image</button>
+            <img id="image-preview-img" src="" alt="Case image" style="display:none">
+            <span id="file-preview-name"></span>
+            <button type="button" id="image-remove-btn" class="btn-remove-image" onclick="removeImagePreview()">Remove file</button>
           </div>
         </div>
       </div>
