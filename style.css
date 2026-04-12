@@ -543,7 +543,63 @@ mark {
   border: 1px solid var(--border);
   object-fit: contain;
   background: var(--bg-alt);
+  cursor: zoom-in;
+  transition: opacity .12s;
 }
+.case-image:hover { opacity: .85; }
+
+.case-attachment-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: var(--bg-alt);
+  border: 1px solid var(--border-mid);
+  border-radius: 3px;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--accent);
+  text-decoration: none;
+  transition: background .12s, border-color .12s;
+}
+.case-attachment-link:hover {
+  background: var(--bg-hover);
+  border-color: var(--accent);
+}
+.case-attachment-link .attachment-icon { font-size: 16px; }
+
+/* ─── Lightbox ────────────────────────────────────────────────────────────────── */
+#lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.88);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: zoom-out;
+}
+#lightbox img {
+  max-width: 92vw;
+  max-height: 88vh;
+  object-fit: contain;
+  border-radius: 3px;
+  box-shadow: 0 8px 40px rgba(0,0,0,.6);
+}
+.lightbox-close {
+  position: fixed;
+  top: 16px;
+  right: 20px;
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 22px;
+  cursor: pointer;
+  line-height: 1;
+  opacity: .7;
+  transition: opacity .12s;
+}
+.lightbox-close:hover { opacity: 1; }
 
 /* ─── Mobile ─────────────────────────────────────────────────────────────────── */
 @media (max-width: 520px) {

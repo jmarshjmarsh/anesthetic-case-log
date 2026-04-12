@@ -26,6 +26,7 @@ let currentSearchQuery = '';
 let pendingImageFile = null;
 let removeImage = false;
 let currentImageUrl = null;
+let currentAttachmentName = null;
 
 // ─── Highlight utility ────────────────────────────────────────────────────────
 function highlight(str) {
@@ -214,6 +215,7 @@ function resetForm() {
   pendingImageFile = null;
   removeImage = false;
   currentImageUrl = null;
+  currentAttachmentName = null;
   updateImagePreview();
 }
 
@@ -280,6 +282,7 @@ async function loadFormData(caseId) {
     setField('f-procedure-notes', c.procedureNotes);
     handleSpecialtyChange(c.specialty || '');
     currentImageUrl = c.imageUrl || null;
+    currentAttachmentName = c.attachmentName || null;
     pendingImageFile = null;
     removeImage = false;
     updateImagePreview();
@@ -316,20 +319,22 @@ async function handleFormSubmit(e) {
   try {
     if (currentCaseId) {
       let imageUrl = removeImage ? null : currentImageUrl;
+      let attachmentName = removeImage ? null : currentAttachmentName;
       if (removeImage && currentImageUrl) {
-        await window.casesDB.deleteImage(currentCaseId);
+        await window.casesDB.deleteImage(currentCaseId, currentAttachmentName);
       }
       if (pendingImageFile) {
-        btn.textContent = 'Uploading image…';
+        btn.textContent = 'Uploading file…';
         imageUrl = await window.casesDB.uploadImage(currentCaseId, pendingImageFile);
+        attachmentName = pendingImageFile.name;
       }
-      await window.casesDB.update(currentCaseId, { ...data, imageUrl: imageUrl || null });
+      await window.casesDB.update(currentCaseId, { ...data, imageUrl: imageUrl || null, attachmentName: attachmentName || null });
     } else {
       const docRef = await window.casesDB.add(data);
       if (pendingImageFile) {
-        btn.textContent = 'Uploading image…';
+        btn.textContent = 'Uploading file…';
         const imageUrl = await window.casesDB.uploadImage(docRef.id, pendingImageFile);
-        await window.casesDB.update(docRef.id, { imageUrl });
+        await window.casesDB.update(docRef.id, { imageUrl, attachmentName: pendingImageFile.name });
       }
     }
     btn.disabled = false;
@@ -409,7 +414,7 @@ function renderDetail(c) {
       </div>
     </div>
 
-    ${c.imageUrl ? `<div class="detail-section"><img class="case-image" src="${escHtml(c.imageUrl)}" alt="Case image" loading="lazy"></div>` : ''}
+    ${c.imageUrl ? renderAttachment(c.imageUrl, c.attachmentName) : ''}
 
     ${c.specialty === 'Procedure' || c.specialty === 'Reference'
       ? (c.procedureNotes ? `<div class="detail-section"><div class="procedure-text">${highlight(c.procedureNotes)}</div></div>` : '')
@@ -445,6 +450,46 @@ async function deleteCaseFromDetail() {
   }
 }
 window.deleteCaseFromDetail = deleteCaseFromDetail;
+
+// ─── Attachment rendering & lightbox ─────────────────────────────────────────
+function isImageAttachment(name) {
+  if (!name) return true; // legacy uploads had no name — assume image
+  return /\.(jpe?g|png|gif|webp|svg|bmp|heic|heif)$/i.test(name);
+}
+
+function renderAttachment(url, name) {
+  if (isImageAttachment(name)) {
+    return `<div class="detail-section">
+      <img class="case-image" src="${escHtml(url)}" alt="Case image" loading="lazy"
+           onclick="openLightbox('${escHtml(url)}')">
+    </div>`;
+  }
+  const label = name || 'Download attachment';
+  return `<div class="detail-section">
+    <a class="case-attachment-link" href="${escHtml(url)}" target="_blank" rel="noopener noreferrer">
+      <span class="attachment-icon">📎</span>${escHtml(label)}
+    </a>
+  </div>`;
+}
+
+function openLightbox(url) {
+  const lb = document.getElementById('lightbox');
+  document.getElementById('lightbox-img').src = url;
+  lb.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+window.openLightbox = openLightbox;
+
+function closeLightbox() {
+  document.getElementById('lightbox').style.display = 'none';
+  document.getElementById('lightbox-img').src = '';
+  document.body.style.overflow = '';
+}
+window.closeLightbox = closeLightbox;
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeLightbox();
+});
 
 // ─── Utilities ────────────────────────────────────────────────────────────────
 function formatDate(dateStr) {
