@@ -1,12 +1,20 @@
-// ─── Procedure mode toggle ────────────────────────────────────────────────────
+// ─── Procedure / Reference mode toggle ───────────────────────────────────────
 function handleSpecialtyChange(val) {
   const isProcedure = val === 'Procedure';
+  const isReference = val === 'Reference';
+  const isSimpleMode = isProcedure || isReference;
   document.querySelectorAll('.anesthetic-field').forEach(el => {
-    el.style.display = isProcedure ? 'none' : '';
+    el.style.display = isSimpleMode ? 'none' : '';
   });
   document.querySelectorAll('.procedure-field').forEach(el => {
-    el.style.display = isProcedure ? '' : 'none';
+    el.style.display = isSimpleMode ? '' : 'none';
   });
+  const label = document.getElementById('f-procedure-label');
+  if (label) {
+    label.innerHTML = isReference
+      ? 'Title <span class="req">*</span>'
+      : 'Procedure Name <span class="req">*</span>';
+  }
 }
 window.handleSpecialtyChange = handleSpecialtyChange;
 
@@ -130,7 +138,8 @@ function renderCases(cases) {
 
   el.innerHTML = `<div class="cases-count">${totalLabel}</div>` + sortedKeys.map(specialty => {
     const cards = groups[specialty].map(c => {
-      const previewText = c.specialty === 'Procedure' ? c.procedureNotes : c.keyConsiderations;
+      const isSimpleMode = c.specialty === 'Procedure' || c.specialty === 'Reference';
+      const previewText = isSimpleMode ? c.procedureNotes : c.keyConsiderations;
       const considerations = previewText
         ? (previewText.length > 110 ? previewText.slice(0, 110) + '…' : previewText)
         : '';
@@ -140,6 +149,7 @@ function renderCases(cases) {
           <div class="card-top">
             ${c.anestheticType ? `<span class="badge">${escHtml(c.anestheticType)}</span>` : ''}
             ${c.specialty === 'Procedure' ? `<span class="badge-procedure">Procedure</span>` : ''}
+            ${c.specialty === 'Reference' ? `<span class="badge-procedure">Reference</span>` : ''}
           </div>
           <div class="card-procedure">${escHtml(c.procedureName || 'Untitled case')}</div>
           ${considerations ? `<div class="card-considerations">${escHtml(considerations)}</div>` : ''}
@@ -290,17 +300,17 @@ async function handleFormSubmit(e) {
   btn.textContent = 'Saving…';
 
   const specialty = document.getElementById('f-specialty').value;
-  const isProcedure = specialty === 'Procedure';
+  const isSimpleMode = specialty === 'Procedure' || specialty === 'Reference';
   const data = {
     specialty:         specialty,
     procedureName:     document.getElementById('f-procedure').value,
-    anestheticType:    isProcedure ? '' : document.getElementById('f-anesthetic-type').value,
-    airway:            isProcedure ? '' : document.getElementById('f-airway').value,
-    drugs:             isProcedure ? '' : document.getElementById('f-drugs').value,
-    keyConsiderations: isProcedure ? '' : document.getElementById('f-considerations').value,
-    complications:     isProcedure ? '' : document.getElementById('f-complications').value,
-    notes:             isProcedure ? '' : document.getElementById('f-notes').value,
-    procedureNotes:    isProcedure ? document.getElementById('f-procedure-notes').value : '',
+    anestheticType:    isSimpleMode ? '' : document.getElementById('f-anesthetic-type').value,
+    airway:            isSimpleMode ? '' : document.getElementById('f-airway').value,
+    drugs:             isSimpleMode ? '' : document.getElementById('f-drugs').value,
+    keyConsiderations: isSimpleMode ? '' : document.getElementById('f-considerations').value,
+    complications:     isSimpleMode ? '' : document.getElementById('f-complications').value,
+    notes:             isSimpleMode ? '' : document.getElementById('f-notes').value,
+    procedureNotes:    isSimpleMode ? document.getElementById('f-procedure-notes').value : '',
   };
 
   try {
@@ -395,12 +405,13 @@ function renderDetail(c) {
         ${c.specialty      ? `<span class="badge-lg">${escHtml(c.specialty)}</span>`      : ''}
         ${c.anestheticType ? `<span class="badge">${escHtml(c.anestheticType)}</span>`    : ''}
         ${c.specialty === 'Procedure' ? `<span class="badge-procedure">Procedure</span>` : ''}
+        ${c.specialty === 'Reference' ? `<span class="badge-procedure">Reference</span>` : ''}
       </div>
     </div>
 
     ${c.imageUrl ? `<div class="detail-section"><img class="case-image" src="${escHtml(c.imageUrl)}" alt="Case image" loading="lazy"></div>` : ''}
 
-    ${c.specialty === 'Procedure'
+    ${c.specialty === 'Procedure' || c.specialty === 'Reference'
       ? (c.procedureNotes ? `<div class="detail-section"><div class="procedure-text">${highlight(c.procedureNotes)}</div></div>` : '')
       : `
         ${c.airway ? `<div class="detail-section detail-mono"><h3>Airway</h3>${field('', c.airway)}</div>` : ''}
