@@ -466,11 +466,32 @@ function renderAttachment(url, name) {
   }
   const label = name || 'Download attachment';
   return `<div class="detail-section">
-    <a class="case-attachment-link" href="${escHtml(url)}" target="_blank" rel="noopener noreferrer">
+    <a class="case-attachment-link" href="${escHtml(url)}"
+       data-url="${escHtml(url)}" data-name="${escHtml(name || '')}"
+       onclick="openFileAttachment(event)" rel="noopener noreferrer">
       <span class="attachment-icon">📎</span>${escHtml(label)}
     </a>
   </div>`;
 }
+
+function openFileAttachment(e) {
+  e.preventDefault();
+  const url  = e.currentTarget.dataset.url;
+  const name = e.currentTarget.dataset.name;
+  if (name && /\.pdf$/i.test(name)) {
+    // Wrap in an HTML page so Chrome doesn't auto-trigger the print dialog
+    const html = `<!DOCTYPE html><html><head><title>${escHtml(name)}</title>` +
+      `<style>*{margin:0;padding:0}html,body{height:100%;overflow:hidden}</style></head>` +
+      `<body><embed src="${url}" type="application/pdf" width="100%" height="100%"></body></html>`;
+    const blob = new Blob([html], { type: 'text/html' });
+    const blobUrl = URL.createObjectURL(blob);
+    window.open(blobUrl, '_blank');
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+  } else {
+    window.open(url, '_blank');
+  }
+}
+window.openFileAttachment = openFileAttachment;
 
 function openLightbox(url) {
   const lb = document.getElementById('lightbox');
